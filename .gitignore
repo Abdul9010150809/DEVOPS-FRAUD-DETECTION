@@ -193,6 +193,9 @@ typings/
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# React build cache
+frontend/node_modules/.cache/
+
 # OS generated files
 .DS_Store
 .DS_Store?
