@@ -5,6 +5,7 @@ from datetime import datetime
 
 class DBService:
     def __init__(self, db_path=None):
+        
         # Use absolute path resolution
         if db_path:
             self.db_path = db_path
