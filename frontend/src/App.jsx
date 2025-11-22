@@ -39,7 +39,8 @@ function App() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/fraud/stats');
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/fraud/stats`);
       if (response.ok) {
         const data = await response.json();
         setStats(data.data);
