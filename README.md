@@ -22,6 +22,46 @@ The system consists of:
 - **Infrastructure**: Docker containers and Kubernetes manifests
 - **ML Models**: Pre-trained anomaly detection models
 
+### Project Structure
+
+```
+├── backend/                 # Python FastAPI backend
+│   ├── src/                 # Source code
+│   │   ├── api/            # API controllers
+│   │   ├── core/           # Core ML and fraud detection logic
+│   │   ├── services/       # Database and external services
+│   │   └── utils/          # Utilities and configurations
+│   ├── tests/              # Unit and integration tests
+│   └── requirements.txt    # Python dependencies
+├── frontend/                # React frontend dashboard
+│   ├── src/                # React components and logic
+│   ├── public/             # Static assets
+│   └── package.json        # Node.js dependencies
+├── infra/                  # Infrastructure as Code
+│   ├── docker/             # Dockerfiles
+│   ├── k8s/                # Kubernetes manifests
+│   └── terraform/          # Terraform configurations
+├── ml/                     # Machine learning components
+│   ├── models/             # Pre-trained models
+│   ├── datasets/           # Training data
+│   └── notebooks/          # Jupyter notebooks
+├── docs/                   # Documentation
+├── scripts/                # Utility scripts
+└── security/               # Security configurations
+```
+
+### Tools Used
+
+- **Backend**: Python, FastAPI, Pytest, SQLite
+- **Frontend**: React, Axios, Recharts
+- **ML**: Scikit-learn, Pandas
+- **Infrastructure**: Docker, Kubernetes, Terraform
+- **CI/CD**: GitHub Actions
+- **Version Control**: Git
+- **Communication**: Slack API
+
+For more details, see [GitLab Tools Used](docs/07_GitLab_Tools_Used.pdf).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -55,6 +95,16 @@ cd backend && python -m pytest
 cd frontend && npm test
 ```
 
+## 🔄 CI/CD
+
+The project uses GitHub Actions for continuous integration and deployment. The CI pipeline includes:
+
+- Automated testing for backend (Python/pytest) and frontend (React/Jest)
+- Docker image builds for containerized deployment
+- Linting and code quality checks
+
+See [.github/workflows/ci.yml](.github/workflows/ci.yml) for the complete workflow configuration.
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -62,6 +112,10 @@ cd frontend && npm test
 3. Make your changes
 4. Run tests
 5. Submit a pull request
+
+## 🏆 Hackathon
+
+This project was developed as part of the GitLab Hackathon conducted by IIT Bombay.
 
 ## 📜 License
 
