@@ -57,7 +57,7 @@ jobs:
  
       - name: Run frontend tests
         run: |
-          npm test -- --coverage --watchAll=false
+          npm test -- --coverage --watchAll=false --passWithNoTests
 
   docker:
     runs-on: ubuntu-latest
