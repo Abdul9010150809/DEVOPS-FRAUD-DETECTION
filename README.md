@@ -77,6 +77,21 @@ For more details, see [GitLab Tools Used](docs/07_GitLab_Tools_Used.pdf).
 ### Local Development
 See [backend/README_BACKEND.md](backend/README_BACKEND.md) and [frontend/README_FRONTEND.md](frontend/README_FRONTEND.md) for detailed setup instructions.
 
+## 🚀 Deployment
+
+The application is deployed on Render with the following services:
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend Dashboard | https://devops-fraud-frontend-1.onrender.com/ | React-based UI for monitoring DevOps pipelines and security threats |
+| Backend API | https://devops-fraud-backend.onrender.com/ | FastAPI backend providing fraud detection, ML analysis, and webhook handling |
+
+### Deployment Details
+- **Frontend**: Static site hosted on Render, built from React application
+- **Backend**: Web service on Render, running Python FastAPI with ML models
+- **Environment**: Production environment with configured API endpoints
+- **CI/CD**: Automated deployments via GitHub integration with Render
+
 ## 📚 Documentation
 
 - [API Documentation](docs/04_API_Documentation.md)
