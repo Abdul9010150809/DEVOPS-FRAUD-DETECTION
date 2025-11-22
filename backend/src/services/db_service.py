@@ -108,6 +108,8 @@ class DBService:
 
     def store_commit_analysis(self, result):
         """Store individual commit analysis"""
+        # Ensure tables exist before attempting to insert
+        self._ensure_tables()
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -128,6 +130,8 @@ class DBService:
 
     def store_alert(self, alert_type, severity, message, repository=None, commit_id=None):
         """Store an alert"""
+        # Ensure tables exist before attempting to insert
+        self._ensure_tables()
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
