@@ -1,0 +1,71 @@
+# DevOps Fraud Shield Dependency Blacklist
+# This file contains dependencies that are not allowed in the project due to security vulnerabilities
+
+# Cryptography libraries with known vulnerabilities
+pycrypto
+pycryptodome<3.10.0
+cryptography<3.4
+
+# Web frameworks with security issues
+django<3.2
+flask<2.0
+fastapi<0.68.0
+
+# Database libraries
+pymongo<3.12
+sqlalchemy<1.4
+
+# HTTP libraries
+requests<2.25.0
+urllib3<1.26
+
+# Authentication libraries
+pyjwt<2.0
+python-jose<3.3
+
+# File handling
+pillow<8.0
+
+# YAML parsers (use safe_load)
+pyyaml<5.4
+
+# XML parsers (avoid or use defusedxml)
+xml.etree.ElementTree
+xml.dom.minidom
+
+# Random number generators
+random
+secrets
+
+# OS operations (be careful)
+os.system
+subprocess.call
+subprocess.run
+
+# Network operations
+socket
+urllib
+
+# Serialization (use safe alternatives)
+pickle
+marshal
+shelve
+
+# Eval and exec
+eval
+exec
+compile
+
+# Input functions
+input
+raw_input
+
+# File operations
+open
+file
+
+# Regular expressions (be careful with ReDoS)
+re
+
+# Comments indicate categories and reasoning
+# Update this list regularly based on security advisories

@@ -1,0 +1,35 @@
+{
+  "secrets": [
+    {
+      "name": "AWS Access Key",
+      "pattern": "AKIA[0-9A-Z]{16}",
+      "severity": "CRITICAL"
+    },
+    {
+      "name": "Google API Key",
+      "pattern": "AIza[0-9A-Za-z\\-_]{35}",
+      "severity": "CRITICAL"
+    },
+    {
+      "name": "Private Key Block",
+      "pattern": "-----BEGIN PRIVATE KEY-----",
+      "severity": "HIGH"
+    },
+    {
+      "name": "Hardcoded Password",
+      "pattern": "(password|passwd|pwd)\\s*[:=]\\s*['\"][a-zA-Z0-9@#$%^&*]{6,}['\"]",
+      "severity": "HIGH"
+    }
+  ],
+  "suspiciousFiles": [
+    ".exe",
+    ".dll",
+    ".bat",
+    ".pif",
+    ".scr"
+  ],
+  "maliciousIPs": [
+    "192.168.1.55", 
+    "10.0.0.99"
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "common_attack_patterns": {
+    "sql_injection": [
+      "'; DROP TABLE users; --",
+      "' OR '1'='1",
+      "UNION SELECT * FROM users",
+      "'; EXEC xp_cmdshell",
+      "'; WAITFOR DELAY '0:0:5' --"
+    ],
+    "xss_patterns": [
+      "<script>alert('xss')</script>",
+      "javascript:alert('xss')",
+      "<img src=x onerror=alert('xss')>",
+      "<iframe src='javascript:alert(\"xss\")'>",
+      "onmouseover=alert('xss')"
+    ],
+    "command_injection": [
+      "; rm -rf /",
+      "| cat /etc/passwd",
+      "`whoami`",
+      "$(rm -rf /)",
+      "; netcat -e /bin/sh"
+    ],
+    "path_traversal": [
+      "../../../etc/passwd",
+      "..\\..\\..\\windows\\system32\\config\\sam",
+      "%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+      "....//....//....//etc/passwd"
+    ]
+  },
+  "suspicious_commit_indicators": {
+    "emergency_commits": [
+      "emergency",
+      "urgent",
+      "critical",
+      "hotfix",
+      "security patch",
+      "immediate",
+      "asap",
+      "now"
+    ],
+    "suspicious_messages": [
+      "bypass",
+      "override",
+      "disable security",
+      "remove auth",
+      "skip validation",
+      "force commit",
+      "god mode",
+      "admin override"
+    ],
+    "large_changes": {
+      "max_files": 50,
+      "max_lines": 1000,
+      "suspicious_file_types": [".exe", ".dll", ".so", ".dylib", ".bat", ".cmd", ".scr"]
+    }
+  },
+  "network_threats": {
+    "suspicious_ips": [
+      "127.0.0.1",
+      "0.0.0.0",
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ],
+    "suspicious_user_agents": [
+      "sqlmap",
+      "nmap",
+      "nikto",
+      "dirbuster",
+      "gobuster",
+      "burpsuite",
+      "owasp",
+      "acunetix",
+      "nessus"
+    ],
+    "suspicious_headers": [
+      "X-Forwarded-For",
+      "X-Real-IP",
+      "X-Originating-IP",
+      "X-Remote-Addr"
+    ]
+  },
+  "authentication_threats": {
+    "brute_force_indicators": {
+      "max_attempts_per_minute": 5,
+      "max_attempts_per_hour": 20,
+      "block_duration_minutes": 15
+    },
+    "suspicious_logins": [
+      "admin",
+      "administrator",
+      "root",
+      "system",
+      "guest",
+      "test",
+      "user"
+    ],
+    "weak_passwords": [
+      "password",
+      "123456",
+      "qwerty",
+      "admin",
+      "letmein",
+      "welcome"
+    ]
+  },
+  "data_exfiltration": {
+    "sensitive_files": [
+      ".env",
+      "config.json",
+      "secrets.json",
+      "credentials.json",
+      ".aws/credentials",
+      ".ssh/id_rsa",
+      "id_rsa",
+      ".git-credentials"
+    ],
+    "suspicious_endpoints": [
+      "/api/debug",
+      "/api/logs",
+      "/api/config",
+      "/phpinfo",
+      "/server-status",
+      "/.env",
+      "/.git/config"
+    ]
+  },
+  "timing_attacks": {
+    "suspicious_timing_patterns": {
+      "exact_hour_commits": true,
+      "rapid_successive_commits": 10,
+      "unusual_commit_frequency": 100
+    },
+    "automated_activity_indicators": [
+      "identical_commit_times",
+      "perfectly_timed_commits",
+      "commits_every_n_minutes"
+    ]
+  },
+  "malware_indicators": {
+    "file_signatures": [
+      "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
+    ],
+    "suspicious_extensions": [
+      ".exe",
+      ".scr",
+      ".pif",
+      ".com",
+      ".bat",
+      ".cmd",
+      ".vbs",
+      ".js",
+      ".jar",
+      ".war"
+    ],
+    "encoded_content_patterns": [
+      "base64",
+      "eval(base64_decode",
+      "atob(",
+      "btoa("
+    ]
+  },
+  "insider_threats": {
+    "privilege_escalation": [
+      "sudo",
+      "su",
+      "runas",
+      "elevated",
+      "administrator"
+    ],
+    "data_access_patterns": [
+      "SELECT * FROM users",
+      "SELECT * FROM credentials",
+      "cat /etc/shadow",
+      "type %windir%\\system32\\config\\sam"
+    ]
+  },
+  "supply_chain_attacks": {
+    "suspicious_dependencies": [
+      "malicious-package",
+      "fake-package",
+      "typo-squatted-package"
+    ],
+    "compromised_builds": [
+      "modified build scripts",
+      "unexpected binary changes",
+      "unsigned artifacts"
+    ]
+  }
+}

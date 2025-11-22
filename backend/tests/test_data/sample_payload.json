@@ -1,0 +1,74 @@
+{
+  "object_kind": "push",
+  "event_name": "push",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "abc123def456789abcdef123456789abcdef1234",
+  "ref": "refs/heads/main",
+  "checkout_sha": "abc123def456789abcdef123456789abcdef1234",
+  "message": null,
+  "user_id": 123,
+  "user_name": "Test User",
+  "user_username": "testuser",
+  "user_email": "test@example.com",
+  "user_avatar": "https://gitlab.com/uploads/-/system/user/avatar/123/avatar.png",
+  "project_id": 456,
+  "project": {
+    "id": 456,
+    "name": "test-project",
+    "description": "A test project for DevOps Fraud Shield",
+    "web_url": "https://gitlab.com/testgroup/test-project",
+    "avatar_url": null,
+    "git_ssh_url": "git@gitlab.com:testgroup/test-project.git",
+    "git_http_url": "https://gitlab.com/testgroup/test-project.git",
+    "namespace": "testgroup",
+    "visibility_level": 20,
+    "path_with_namespace": "testgroup/test-project",
+    "default_branch": "main",
+    "ci_config_path": null,
+    "homepage": "https://gitlab.com/testgroup/test-project",
+    "url": "git@gitlab.com:testgroup/test-project.git",
+    "ssh_url": "git@gitlab.com:testgroup/test-project.git",
+    "http_url": "https://gitlab.com/testgroup/test-project.git"
+  },
+  "commits": [
+    {
+      "id": "abc123def456789abcdef123456789abcdef1234",
+      "message": "Add new authentication feature\n\nThis commit adds a new authentication system with improved security.",
+      "title": "Add new authentication feature",
+      "timestamp": "2024-01-15T10:30:45Z",
+      "url": "https://gitlab.com/testgroup/test-project/-/commit/abc123def456789abcdef123456789abcdef1234",
+      "author": {
+        "name": "Test User",
+        "email": "test@example.com"
+      },
+      "added": ["src/auth.py", "tests/test_auth.py"],
+      "modified": ["requirements.txt"],
+      "removed": []
+    },
+    {
+      "id": "def456789abcdef123456789abcdef123456789a",
+      "message": "Fix critical security vulnerability in authentication\n\nAddresses CVE-2024-12345 by implementing proper input validation.",
+      "title": "Fix critical security vulnerability in authentication",
+      "timestamp": "2024-01-15T11:15:20Z",
+      "url": "https://gitlab.com/testgroup/test-project/-/commit/def456789abcdef123456789abcdef123456789a",
+      "author": {
+        "name": "Security Team",
+        "email": "security@example.com"
+      },
+      "added": [],
+      "modified": ["src/auth.py", "src/validator.py"],
+      "removed": ["src/old_auth.py"]
+    }
+  ],
+  "total_commits_count": 2,
+  "push_options": {},
+  "repository": {
+    "name": "test-project",
+    "url": "git@gitlab.com:testgroup/test-project.git",
+    "description": "A test project for DevOps Fraud Shield",
+    "homepage": "https://gitlab.com/testgroup/test-project",
+    "git_http_url": "https://gitlab.com/testgroup/test-project.git",
+    "git_ssh_url": "git@gitlab.com:testgroup/test-project.git",
+    "visibility_level": 20
+  }
+}
