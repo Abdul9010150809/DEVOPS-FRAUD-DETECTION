@@ -151,7 +151,7 @@ class DBService:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    SELECT id, type, severity, message, repository, commit_id, created_at
+                    SELECT id, type, severity, message, repository, commit_id, resolved, created_at
                     FROM alerts
                     WHERE resolved = FALSE
                     ORDER BY created_at DESC
@@ -168,7 +168,8 @@ class DBService:
                         "message": row[3],
                         "repository": row[4],
                         "commit_id": row[5],
-                        "created_at": row[6]
+                        "resolved": bool(row[6]),
+                        "created_at": row[7]
                     })
                 return alerts
         except Exception as e:
