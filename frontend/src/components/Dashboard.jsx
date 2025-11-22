@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import RiskGraph from './RiskGraph';
+import fraudController from '../api/fraudController';
+import alertsController from '../api/alertsController';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -18,20 +20,18 @@ const Dashboard = () => {
     setLoading(true);
     try {
       // 1. Fetch real stats from backend
-      const statsResponse = await fetch('/api/fraud/stats');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData.data);
-      } else {
-        // Fallback to mock data if API fails
-        console.warn('Using fallback stats data');
-        setStats({
-          total_analyses: 0,
-          average_risk_score: 0,
-          high_risk_analyses: 0,
-          active_alerts: 0
-        });
-      }
+      const statsData = await fraudController.getFraudStats();
+      setStats(statsData.data);
+    } catch (statsError) {
+      // Fallback to mock data if API fails
+      console.warn('Using fallback stats data', statsError);
+      setStats({
+        total_analyses: 0,
+        average_risk_score: 0,
+        high_risk_analyses: 0,
+        active_alerts: 0
+      });
+    }
 
       // 2. Generate Graph Data (realistic data based on backend stats)
       const data = [];
@@ -52,13 +52,10 @@ const Dashboard = () => {
 
       // 3. Fetch recent alerts from backend
       try {
-        const alertsResponse = await fetch('/api/alerts/recent?limit=5');
-        if (alertsResponse.ok) {
-          const alertsData = await alertsResponse.json();
-          setRecentAlerts(alertsData.alerts || []);
-        }
+        const alertsData = await alertsController.getRecentAlerts(5);
+        setRecentAlerts(alertsData.alerts || []);
       } catch (alertsError) {
-        console.warn('Failed to fetch alerts, using fallback data');
+        console.warn('Failed to fetch alerts, using fallback data', alertsError);
         setRecentAlerts([
           { id: 1, type: 'secret_leak', severity: 'critical', message: 'AWS Key found', created_at: Date.now()/1000 - 300 },
           { id: 2, type: 'anomaly', severity: 'medium', message: 'Unusual commit time', created_at: Date.now()/1000 - 3600 }

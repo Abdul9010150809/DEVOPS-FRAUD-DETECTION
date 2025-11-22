@@ -2,7 +2,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 class ApiClient {
   constructor() {
-    this.baseURL = API_BASE_URL;
+    this.baseURL = API_URL;
   }
 
   async request(endpoint, options = {}) {
@@ -31,60 +31,60 @@ class ApiClient {
 
   // Fraud analysis endpoints
   async getFraudStats() {
-    return this.request('/fraud/stats');
+    return this.request('/api/fraud/stats');
   }
 
   async analyzeRepository(projectId) {
-    return this.request('/fraud/analyze', {
+    return this.request('/api/fraud/analyze', {
       method: 'POST',
       body: JSON.stringify({ project_id: projectId }),
     });
   }
 
   async getRepositoryRisk(projectId) {
-    return this.request(`/fraud/repositories/${projectId}/risk`);
+    return this.request(`/api/fraud/repositories/${projectId}/risk`);
   }
 
   async scanRepository(projectId, depth = 50) {
-    return this.request(`/fraud/repositories/${projectId}/scan`, {
+    return this.request(`/api/fraud/repositories/${projectId}/scan`, {
       method: 'POST',
       body: JSON.stringify({ depth }),
     });
   }
 
   async checkMLHealth() {
-    return this.request('/fraud/health/ml');
+    return this.request('/api/fraud/health/ml');
   }
 
   // Alerts endpoints
   async getRecentAlerts(limit = 50) {
-    return this.request(`/alerts/recent?limit=${limit}`);
+    return this.request(`/api/alerts/recent?limit=${limit}`);
   }
 
   async resolveAlert(alertId) {
-    return this.request(`/alerts/${alertId}/resolve`, {
+    return this.request(`/api/alerts/${alertId}/resolve`, {
       method: 'PUT',
     });
   }
 
   async getAlertsSummary() {
-    return this.request('/alerts/summary');
+    return this.request('/api/alerts/summary');
   }
 
   async testSlackNotification() {
-    return this.request('/alerts/test/slack', {
+    return this.request('/api/alerts/test/slack', {
       method: 'POST',
     });
   }
 
   async testEmailNotification() {
-    return this.request('/alerts/test/email', {
+    return this.request('/api/alerts/test/email', {
       method: 'POST',
     });
   }
 
   async escalateAlert(alertId, priority = 'high') {
-    return this.request(`/alerts/escalate/${alertId}`, {
+    return this.request(`/api/alerts/escalate/${alertId}`, {
       method: 'POST',
       body: JSON.stringify({ priority }),
     });
@@ -92,7 +92,7 @@ class ApiClient {
 
   // Webhook endpoints
   async testWebhook() {
-    return this.request('/webhook/test');
+    return this.request('/api/webhook/test');
   }
 }
 
