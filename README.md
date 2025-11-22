@@ -50,15 +50,25 @@ The system consists of:
 └── security/               # Security configurations
 ```
 
-### Tools Used
+### Technology Stack
 
-- **Backend**: Python, FastAPI, Pytest, SQLite
-- **Frontend**: React, Axios, Recharts
-- **ML**: Scikit-learn, Pandas
-- **Infrastructure**: Docker, Kubernetes, Terraform
-- **CI/CD**: GitHub Actions
-- **Version Control**: Git
-- **Communication**: Slack API
+| Technology | Usage | Component |
+|------------|-------|-----------|
+| **Python** | Core programming language for backend services | Backend |
+| **FastAPI** | High-performance REST API framework | Backend |
+| **Pytest** | Unit and integration testing framework | Backend |
+| **SQLite** | Lightweight database for data storage | Backend |
+| **React** | Component-based UI library for dashboard | Frontend |
+| **Axios** | HTTP client for API communication | Frontend |
+| **Recharts** | Data visualization library for charts | Frontend |
+| **Scikit-learn** | Machine learning algorithms for fraud detection | ML |
+| **Pandas** | Data manipulation and analysis | ML |
+| **Docker** | Containerization for consistent deployment | Infrastructure |
+| **Kubernetes** | Container orchestration for scaling | Infrastructure |
+| **Terraform** | Infrastructure as Code for cloud resources | Infrastructure |
+| **GitHub Actions** | CI/CD pipeline automation | CI/CD |
+| **Git** | Version control and collaboration | Development |
+| **Slack API** | Alert notifications and communication | Integration |
 
 For more details, see [GitLab Tools Used](docs/07_GitLab_Tools_Used.pdf).
 
