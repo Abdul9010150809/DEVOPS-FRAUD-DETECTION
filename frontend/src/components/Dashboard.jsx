@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import RiskGraph from './RiskGraph';
 import fraudController from '../api/fraudController';
@@ -33,50 +34,37 @@ const Dashboard = () => {
       });
     }
 
-      // 2. Generate Graph Data (realistic data based on backend stats)
-      const data = [];
-      const now = new Date();
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        // Generate more realistic data based on actual stats
-        const baseRisk = Math.max(0.1, Math.min(0.8, 0.3 + Math.sin(i / 5) * 0.2 + (Math.random() - 0.5) * 0.2));
-        data.push({
-          date: date.toISOString().split('T')[0],
-          riskScore: baseRisk,
-          analyses: Math.floor(Math.random() * 15) + 3,
-          alerts: Math.floor(baseRisk * 8)
-        });
-      }
-      setGraphData(data);
-
-      // 3. Fetch recent alerts from backend
-      try {
-        const alertsData = await alertsController.getRecentAlerts(5);
-        setRecentAlerts(alertsData.alerts || []);
-      } catch (alertsError) {
-        console.warn('Failed to fetch alerts, using fallback data', alertsError);
-        setRecentAlerts([
-          { id: 1, type: 'secret_leak', severity: 'critical', message: 'AWS Key found', created_at: Date.now()/1000 - 300 },
-          { id: 2, type: 'anomaly', severity: 'medium', message: 'Unusual commit time', created_at: Date.now()/1000 - 3600 }
-        ]);
-      }
-
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error("Failed to fetch dashboard data", error);
-      // Set fallback data
-      setStats({
-        total_analyses: 0,
-        average_risk_score: 0,
-        high_risk_analyses: 0,
-        active_alerts: 0
+    // 2. Generate Graph Data (realistic data based on backend stats)
+    const data = [];
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      // Generate more realistic data based on actual stats
+      const baseRisk = Math.max(0.1, Math.min(0.8, 0.3 + Math.sin(i / 5) * 0.2 + (Math.random() - 0.5) * 0.2));
+      data.push({
+        date: date.toISOString().split('T')[0],
+        riskScore: baseRisk,
+        analyses: Math.floor(Math.random() * 15) + 3,
+        alerts: Math.floor(baseRisk * 8)
       });
-      setGraphData([]);
-      setRecentAlerts([]);
-    } finally {
-      setLoading(false);
     }
+    setGraphData(data);
+
+    // 3. Fetch recent alerts from backend
+    try {
+      const alertsData = await alertsController.getRecentAlerts(5);
+      setRecentAlerts(alertsData.alerts || []);
+    } catch (alertsError) {
+      console.warn('Failed to fetch alerts, using fallback data', alertsError);
+      setRecentAlerts([
+        { id: 1, type: 'secret_leak', severity: 'critical', message: 'AWS Key found', created_at: Date.now()/1000 - 300 },
+        { id: 2, type: 'anomaly', severity: 'medium', message: 'Unusual commit time', created_at: Date.now()/1000 - 3600 }
+      ]);
+    }
+
+    setLastUpdated(new Date());
+    setLoading(false);
   }, []);
 
   useEffect(() => {
