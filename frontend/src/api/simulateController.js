@@ -2,9 +2,18 @@ import apiClient from "../services/apiClient";
 
 const simulateController = {
   simulateFraud: async () => {
-    // FIXED: Added "/api" to match the backend route
-    const response = await apiClient.get("/api/simulate");
-    return response.data;
+    try {
+      // 1. Call the correct Backend URL
+      const response = await apiClient.get("/api/simulate");
+
+      // 2. Return the FULL response object 
+      // (This fixes the "reading 'data' of undefined" error in your Dashboard)
+      return response; 
+      
+    } catch (error) {
+      console.error("Simulation API Error:", error);
+      throw error; // Let the Dashboard handle the error
+    }
   },
 };
 
