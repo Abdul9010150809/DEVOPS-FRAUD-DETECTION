@@ -1,27 +1,70 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import apiClient from '../services/apiClient';
 
+// --- STYLES & HELPERS ---
+const styles = {
+  glassContainer: {
+    background: 'rgba(15, 23, 42, 0.6)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(51, 65, 85, 0.5)',
+    borderRadius: '16px',
+    padding: '24px',
+    minHeight: '80vh'
+  },
+  headerText: {
+    background: 'linear-gradient(135deg, #ef4444, #f59e0b)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontSize: '2rem',
+    fontWeight: '800'
+  },
+  severityBadge: (severity) => {
+    const map = {
+      critical: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '#ef4444' },
+      high:     { bg: 'rgba(249, 115, 22, 0.15)', color: '#f97316', border: '#f97316' },
+      medium:   { bg: 'rgba(234, 179, 8, 0.15)',  color: '#eab308', border: '#eab308' },
+      low:      { bg: 'rgba(34, 197, 94, 0.15)',  color: '#22c55e', border: '#22c55e' }
+    };
+    const s = map[severity] || map.low;
+    return {
+      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+      padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase',
+      display: 'inline-flex', alignItems: 'center', gap: '6px'
+    };
+  }
+};
+
+const formatTimeAgo = (timestamp) => {
+  const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
+
 const Alerts = () => {
+  // --- STATE ---
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('unresolved'); // Default to showing actionable items
-  const [error, setError] = useState(null);
+  const [resolvingId, setResolvingId] = useState(null); // Track which specific alert is resolving
+  const [filter, setFilter] = useState('unresolved'); 
 
+  // --- API CALLS ---
   const fetchAlerts = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
       const response = await apiClient.getRecentAlerts(50);
       setAlerts(response.alerts || []);
     } catch (error) {
       console.error('Failed to fetch alerts:', error);
-      setError('Failed to load alerts. Please try again.');
-      // Fallback to mock data for demo
+      // Fallback Data for Demo
       setAlerts([
-        { id: 1, type: 'hardcoded_secret', severity: 'critical', message: 'AWS Access Key detected in main.py', repository: 'backend-repo', resolved: false, created_at: Date.now()/1000 },
-        { id: 2, type: 'suspicious_ip', severity: 'high', message: 'Login from unknown IP (Russia)', repository: 'auth-service', resolved: false, created_at: Date.now()/1000 - 3600 },
-        { id: 3, type: 'dependency_vuln', severity: 'medium', message: 'Lodash version vulnerable', repository: 'frontend-repo', resolved: true, created_at: Date.now()/1000 - 8000 },
-        { id: 4, type: 'policy_violation', severity: 'low', message: 'Commit message too short', repository: 'utils', resolved: false, created_at: Date.now()/1000 - 12000 },
+        { id: 101, type: 'hardcoded_secret', severity: 'critical', message: 'AWS Access Key detected in config.py', repository: 'backend-core', resolved: false, created_at: Date.now() / 1000 - 120 },
+        { id: 102, type: 'suspicious_ip', severity: 'high', message: 'Login attempt from unnusal IP (Russia)', repository: 'auth-service', resolved: false, created_at: Date.now() / 1000 - 3600 },
+        { id: 103, type: 'dependency_vuln', severity: 'medium', message: 'Lodash v4.17 vulnerable to prototype pollution', repository: 'frontend-dash', resolved: true, created_at: Date.now() / 1000 - 8000 },
+        { id: 104, type: 'policy_violation', severity: 'low', message: 'Commit message "fix" is too short', repository: 'utils-lib', resolved: false, created_at: Date.now() / 1000 - 15000 },
       ]);
     } finally {
       setLoading(false);
@@ -32,30 +75,24 @@ const Alerts = () => {
     fetchAlerts();
   }, []);
 
-  const resolveAlert = async (alertId) => {
-    // Optimistic Update: Update UI immediately for better UX
-    const originalAlerts = [...alerts];
-    setAlerts(alerts.map(a => a.id === alertId ? { ...a, resolved: true } : a));
-
-    try {
-      // Call actual API to resolve alert
-      await apiClient.resolveAlert(alertId);
-      console.log(`Alert ${alertId} resolved successfully.`);
-
-      // Refresh alerts after a short delay to ensure backend is updated
-      setTimeout(() => {
-        fetchAlerts();
-      }, 500);
-
-    } catch (error) {
-      // Revert if failed
-      console.error('Resolution failed', error);
-      setAlerts(originalAlerts);
-      alert("Failed to resolve alert. Please try again.");
-    }
+  // --- ACTIONS ---
+  const handleResolve = async (alertId) => {
+    setResolvingId(alertId); // Show loading state on button
+    
+    // Optimistic UI Update
+    setTimeout(async () => {
+      try {
+        await apiClient.resolveAlert(alertId);
+        setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, resolved: true } : a));
+      } catch (e) {
+        alert("Failed to resolve alert.");
+      } finally {
+        setResolvingId(null);
+      }
+    }, 600); // Fake small delay for UX "feeling"
   };
 
-  // Memoize filtered list
+  // --- FILTERING ---
   const filteredAlerts = useMemo(() => {
     return alerts.filter(alert => {
       if (filter === 'all') return true;
@@ -65,203 +102,128 @@ const Alerts = () => {
     });
   }, [alerts, filter]);
 
-  const getSeverityBadge = (severity) => {
-    const colors = {
-      critical: { bg: 'rgba(239, 68, 68, 0.2)', text: '#ef4444', icon: '🚨' },
-      high: { bg: 'rgba(249, 115, 22, 0.2)', text: '#f97316', icon: '⚠️' },
-      medium: { bg: 'rgba(234, 179, 8, 0.2)', text: '#eab308', icon: '🔔' },
-      low: { bg: 'rgba(34, 197, 94, 0.2)', text: '#22c55e', icon: 'ℹ️' }
-    };
-    const style = colors[severity] || colors.low;
-    
-    return (
-      <span style={{ 
-        backgroundColor: style.bg, color: style.text, 
-        padding: '4px 8px', borderRadius: '4px', 
-        fontSize: '0.75rem', fontWeight: 'bold',
-        display: 'flex', alignItems: 'center', gap: '5px', width: 'fit-content'
-      }}>
-        {style.icon} {severity.toUpperCase()}
-      </span>
-    );
-  };
-
   return (
-    <div className="card alerts-page" style={{
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      border: '1px solid #334155',
-      borderRadius: '12px',
-      padding: '24px'
-    }}>
-      <div className="alerts-header header" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        paddingBottom: '16px',
-        borderBottom: '1px solid #334155'
-      }}>
-        <div>
-          <h2 style={{
-            margin: 0,
-            background: 'linear-gradient(135deg, #ef4444, #f59e0b)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontSize: '1.8rem'
-          }}>
-            🚨 Security Alerts
-          </h2>
-          <small style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-            <span style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
-            {filteredAlerts.length} {filter === 'unresolved' ? 'active' : ''} alerts
-          </small>
+    <div className="container" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      
+      <div style={styles.glassContainer}>
+        
+        {/* === HEADER === */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
+          <div>
+            <h2 style={{ ...styles.headerText, margin: 0 }}>🚨 Threat Intelligence</h2>
+            <p style={{ color: '#94a3b8', margin: '8px 0 0 0' }}>Real-time security events and vulnerability scanning.</p>
+          </div>
+          
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', lineHeight: 1 }}>
+              {alerts.filter(a => !a.resolved).length}
+            </div>
+            <div style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Active Threats</div>
+          </div>
         </div>
-        <div className="filter-buttons" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+
+        {/* === FILTERS === */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '25px', overflowX: 'auto', paddingBottom: '5px' }}>
           {[
-            { key: 'all', label: 'All', count: alerts.length },
-            { key: 'unresolved', label: 'Active', count: alerts.filter(a => !a.resolved).length },
-            { key: 'critical', label: 'Critical', count: alerts.filter(a => a.severity === 'critical').length },
-            { key: 'high', label: 'High', count: alerts.filter(a => a.severity === 'high').length }
-          ].map(f => (
+            { id: 'unresolved', label: '⚡ Active', color: '#3b82f6' },
+            { id: 'critical', label: '🚨 Critical', color: '#ef4444' },
+            { id: 'high', label: '🔥 High', color: '#f97316' },
+            { id: 'all', label: '📋 All History', color: '#64748b' },
+          ].map(btn => (
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
+              key={btn.id}
+              onClick={() => setFilter(btn.id)}
               style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: '1px solid #334155',
-                background: filter === f.key ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'transparent',
+                background: filter === btn.id ? btn.color : 'rgba(30, 41, 59, 0.5)',
                 color: 'white',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                transition: 'all 0.3s ease',
-                boxShadow: filter === f.key ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+                border: filter === btn.id ? `1px solid ${btn.color}` : '1px solid rgba(255,255,255,0.1)',
+                padding: '8px 16px', borderRadius: '50px', cursor: 'pointer',
+                fontSize: '0.9rem', fontWeight: filter === btn.id ? 'bold' : 'normal',
+                transition: 'all 0.2s ease',
+                boxShadow: filter === btn.id ? `0 0 15px ${btn.color}40` : 'none'
               }}
             >
-              {f.label}
-              <span style={{
-                background: filter === f.key ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
-                padding: '2px 6px',
-                borderRadius: '10px',
-                fontSize: '0.8rem'
-              }}>
-                {f.count}
+              {btn.label} <span style={{ opacity: 0.6, fontSize: '0.8em', marginLeft: '4px' }}>
+                ({btn.id === 'all' ? alerts.length : alerts.filter(a => btn.id === 'unresolved' ? !a.resolved : a.severity === btn.id).length})
               </span>
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="alerts-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>Loading threat intelligence...</div>
-        ) : filteredAlerts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', background: '#0f172a', borderRadius: '8px' }}>
-            <span style={{ fontSize: '2rem' }}>✅</span>
-            <p>No alerts found for this filter.</p>
-            {error && (
-              <small style={{ color: '#94a3b8', display: 'block', marginTop: '10px' }}>
-                Showing demo data - backend connection issue
-              </small>
-            )}
-          </div>
-        ) : (
-          filteredAlerts.map((alert) => (
-            <div key={alert.id} style={{
-              background: alert.resolved ? 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              borderLeft: `4px solid ${alert.resolved ? '#22c55e' : getSeverityBadge(alert.severity).props.style.background.split(',')[0].replace('rgba(', '').replace(',', '')}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              opacity: alert.resolved && filter !== 'resolved' ? 0.7 : 1,
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  {getSeverityBadge(alert.severity)}
-                  <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500' }}>
-                    {new Date(alert.created_at * 1000).toLocaleString()}
-                  </span>
-                  {alert.resolved && (
-                    <span style={{
-                      background: '#22c55e',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold'
-                    }}>
-                      ✓ RESOLVED
-                    </span>
-                  )}
-                </div>
-
-                <div style={{
-                  fontWeight: '600',
-                  fontSize: '1.2rem',
-                  marginBottom: '8px',
-                  color: '#f1f5f9',
-                  lineHeight: '1.4'
-                }}>
-                  {alert.message}
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  gap: '16px',
-                  fontSize: '0.9rem',
-                  color: '#94a3b8',
-                  flexWrap: 'wrap'
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    📁 <strong>{alert.repository || 'Unknown'}</strong>
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    🏷️ {alert.type.replace('_', ' ')}
-                  </span>
-                  {alert.commit_id && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'monospace' }}>
-                      🔗 {alert.commit_id.substring(0, 8)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {!alert.resolved && (
-                <button
-                  onClick={() => resolveAlert(alert.id)}
-                  style={{
-                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                    border: 'none',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '0.9rem',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
-                    transition: 'all 0.3s ease',
-                    whiteSpace: 'nowrap'
-                  }}
-                  onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
-                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                >
-                  ✅ Resolve
-                </button>
-              )}
+        {/* === ALERTS LIST === */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          
+          {loading ? (
+             <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Scanning repositories...</div>
+          ) : filteredAlerts.length === 0 ? (
+            <div style={{ padding: '60px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed #475569' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🛡️</div>
+              <h3 style={{ color: 'white', margin: 0 }}>All Clear</h3>
+              <p style={{ color: '#64748b' }}>No threats found matching this filter.</p>
             </div>
-          ))
-        )}
+          ) : (
+            filteredAlerts.map(alert => (
+              <div key={alert.id} style={{
+                background: alert.resolved ? 'rgba(6, 78, 59, 0.4)' : 'rgba(30, 41, 59, 0.6)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderLeft: `4px solid ${alert.resolved ? '#22c55e' : styles.severityBadge(alert.severity).border}`,
+                borderRadius: '8px',
+                padding: '20px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                transition: 'transform 0.2s',
+                opacity: alert.resolved && filter !== 'resolved' ? 0.6 : 1
+              }}>
+                
+                {/* Left Side: Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={styles.severityBadge(alert.severity)}>
+                       {alert.severity}
+                    </span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontFamily: 'monospace' }}>
+                      {formatTimeAgo(alert.created_at)}
+                    </span>
+                    <span style={{ color: '#64748b', fontSize: '0.85rem' }}>• {alert.repository}</span>
+                  </div>
+                  
+                  <div style={{ color: '#e2e8f0', fontSize: '1.1rem', fontWeight: '500' }}>
+                    {alert.message}
+                  </div>
+                  
+                  <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#64748b', display: 'flex', gap: '15px' }}>
+                    <span>Type: {alert.type}</span>
+                    {alert.commit_id && <span>Commit: <code style={{ background:'rgba(0,0,0,0.3)', padding:'2px 4px', borderRadius:'4px'}}>{alert.commit_id.substring(0,7)}</code></span>}
+                  </div>
+                </div>
+
+                {/* Right Side: Action */}
+                {!alert.resolved && (
+                  <button
+                    onClick={() => handleResolve(alert.id)}
+                    disabled={resolvingId === alert.id}
+                    style={{
+                      background: resolvingId === alert.id ? '#475569' : 'linear-gradient(135deg, #22c55e, #15803d)',
+                      color: 'white', border: 'none',
+                      padding: '10px 20px', borderRadius: '8px',
+                      cursor: resolvingId === alert.id ? 'not-allowed' : 'pointer',
+                      fontWeight: '600',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
+                      minWidth: '100px'
+                    }}
+                  >
+                    {resolvingId === alert.id ? 'Fixing...' : '✅ Resolve'}
+                  </button>
+                )}
+                {alert.resolved && (
+                   <span style={{ color: '#22c55e', fontWeight: 'bold', border: '1px solid #22c55e', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem' }}>
+                     RESOLVED
+                   </span>
+                )}
+
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

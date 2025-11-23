@@ -1,27 +1,51 @@
 import React, { useState, useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, BarChart, Bar, Area, ComposedChart, AreaChart
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, BarChart, Bar, Area, AreaChart
 } from 'recharts';
+
+// --- STYLES ---
+const styles = {
+  glassContainer: {
+    background: 'rgba(15, 23, 42, 0.6)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(51, 65, 85, 0.5)',
+    borderRadius: '16px',
+    padding: '24px',
+    color: 'white',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  headerText: {
+    background: 'linear-gradient(135deg, #f59e0b, #ef4444)', // Amber to Red
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    margin: 0
+  }
+};
 
 const RiskGraph = ({ data }) => {
   const [chartType, setChartType] = useState('area');
 
-  // Generate mock data if no data provided
+  // --- DATA PROCESSING ---
   const chartData = useMemo(() => {
     if (data && data.length > 0) return data;
 
-    // Generate mock data for standalone usage
+    // Fallback Mock Data
     const mockData = [];
     const now = new Date();
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
-      const baseRisk = 0.3 + Math.sin(i / 5) * 0.2;
+      const baseRisk = 0.3 + Math.sin(i / 5) * 0.2; // Sine wave pattern
       const finalRisk = Math.min(1, Math.max(0, baseRisk + (Math.random() - 0.5) * 0.3));
+      
       mockData.push({
         date: date.toISOString().split('T')[0],
-        riskScore: finalRisk,
+        riskScore: Number(finalRisk.toFixed(2)),
         analyses: Math.floor(Math.random() * 20) + 5,
         alerts: Math.floor(finalRisk * 10)
       });
@@ -29,7 +53,7 @@ const RiskGraph = ({ data }) => {
     return mockData;
   }, [data]);
 
-  // Memoize summary stats
+  // Summary Stats Calculation
   const summary = useMemo(() => {
     if (!chartData.length) return { avg: 0, peak: 0, alerts: 0, highRisk: 0 };
     return {
@@ -40,16 +64,24 @@ const RiskGraph = ({ data }) => {
     };
   }, [chartData]);
 
+  // --- CUSTOM TOOLTIP COMPONENT ---
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="custom-tooltip" style={{ backgroundColor: '#1e293b', padding: '10px', border: '1px solid #334155', borderRadius: '4px' }}>
-          <p className="tooltip-date" style={{ color: '#94a3b8', marginBottom: '5px' }}>{`Date: ${label}`}</p>
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          border: '1px solid #475569',
+          borderRadius: '8px',
+          padding: '12px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
+        }}>
+          <p style={{ color: '#94a3b8', margin: '0 0 8px 0', fontSize: '0.85rem' }}>{label}</p>
           {payload.map((entry, index) => (
-            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', color: entry.color, fontSize: '0.9rem' }}>
-              <span>{entry.name}:</span>
-              <span style={{ fontWeight: 'bold' }}>
-                {entry.dataKey === 'riskScore' ? entry.value.toFixed(2) : entry.value}
+            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: entry.color }}></span>
+              <span style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{entry.name}:</span>
+              <span style={{ color: 'white', fontWeight: 'bold' }}>
+                {entry.dataKey === 'riskScore' ? entry.value : entry.value}
               </span>
             </div>
           ))}
@@ -60,207 +92,103 @@ const RiskGraph = ({ data }) => {
   };
 
   return (
-    <div className="risk-graph card" style={{
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      border: '1px solid #334155',
-      borderRadius: '12px',
-      padding: '24px'
-    }}>
-      <div className="graph-header" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-        paddingBottom: '16px',
-        borderBottom: '1px solid #334155'
-      }}>
+    <div style={styles.glassContainer}>
+      
+      {/* === HEADER & CONTROLS === */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
         <div>
-          <h3 style={{
-            margin: 0,
-            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontSize: '1.8rem'
-          }}>
-            📈 Risk Analysis Over Time
-          </h3>
-          <small style={{ color: '#94a3b8', marginTop: '4px', display: 'block' }}>
-            30-day risk trend analysis with interactive charts
-          </small>
+          <h3 style={styles.headerText}>📈 Risk Analysis</h3>
+          <p style={{ color: '#94a3b8', margin: '4px 0 0 0', fontSize: '0.85rem' }}>
+            30-day security trend monitoring
+          </p>
         </div>
-        <div className="chart-controls" style={{ display: 'flex', gap: '8px' }}>
+
+        {/* Chart Toggle Buttons */}
+        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px', display: 'flex', gap: '4px' }}>
           {[
-            { key: 'area', label: 'Area Chart', icon: '📊' },
-            { key: 'bar', label: 'Bar Chart', icon: '📋' }
+            { key: 'area', icon: '📉', label: 'Trend' },
+            { key: 'bar', icon: '📊', label: 'Volume' }
           ].map(type => (
             <button
               key={type.key}
-              style={{
-                padding: '10px 16px',
-                background: chartType === type.key ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'transparent',
-                border: '1px solid #334155',
-                color: 'white',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                transition: 'all 0.3s ease',
-                boxShadow: chartType === type.key ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
               onClick={() => setChartType(type.key)}
+              style={{
+                background: chartType === type.key ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: chartType === type.key ? 'white' : '#94a3b8',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
             >
-              <span>{type.icon}</span>
-              {type.label}
+              {type.icon} {type.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="graph-container" style={{ height: '400px' }}>
+      {/* === CHART AREA === */}
+      <div style={{ flex: 1, minHeight: '250px', marginBottom: '20px' }}>
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'area' ? (
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 1]} stroke="#94a3b8" tick={{ fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.4} />
+              <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={30} />
+              <YAxis domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
               <Area 
                 type="monotone" 
                 dataKey="riskScore" 
+                name="Risk Score" 
                 stroke="#ef4444" 
+                strokeWidth={3}
                 fillOpacity={1} 
                 fill="url(#colorRisk)" 
-                name="Risk Score" 
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
             </AreaChart>
           ) : (
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="date" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.4} />
+              <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={30} />
+              <YAxis stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Bar dataKey="analyses" fill="#3b82f6" name="Analyses" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="alerts" fill="#f59e0b" name="Alerts" radius={[4, 4, 0, 0]} />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
+              <Bar dataKey="analyses" name="Scans" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+              <Bar dataKey="alerts" name="Alerts" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
             </BarChart>
           )}
         </ResponsiveContainer>
       </div>
 
-      <div className="graph-summary" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px',
-        marginTop: '24px'
-      }}>
-        {[
-          {
-            label: 'Average Risk',
-            value: `${summary.avg}%`,
-            color: summary.avg > 70 ? '#ef4444' : summary.avg > 40 ? '#f59e0b' : '#22c55e',
-            icon: '📊',
-            desc: '30-day average'
-          },
-          {
-            label: 'Peak Risk',
-            value: `${summary.peak}%`,
-            color: '#f59e0b',
-            icon: '🔺',
-            desc: 'Highest recorded'
-          },
-          {
-            label: 'Total Alerts',
-            value: summary.alerts.toLocaleString(),
-            color: '#3b82f6',
-            icon: '🚨',
-            desc: 'Security events'
-          },
-          {
-            label: 'High Risk Days',
-            value: summary.highRisk,
-            color: summary.highRisk > 5 ? '#ef4444' : '#22c55e',
-            icon: '⚠️',
-            desc: 'Days >70% risk'
-          }
-        ].map((item, idx) => (
-          <div key={idx} className="summary-item" style={{
-            background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-            padding: '20px',
-            borderRadius: '12px',
-            textAlign: 'center',
-            border: '1px solid #475569',
-            transition: 'all 0.3s ease',
-            cursor: 'pointer',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '60px',
-              height: '60px',
-              background: `${item.color}20`,
-              borderRadius: '50%',
-              transform: 'translate(20px, -20px)'
-            }}></div>
-
-            <div style={{
-              fontSize: '1.5rem',
-              marginBottom: '8px',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-            }}>
-              {item.icon}
-            </div>
-
-            <div style={{
-              fontSize: '0.9rem',
-              color: '#94a3b8',
-              marginBottom: '4px',
-              fontWeight: '500'
-            }}>
-              {item.label}
-            </div>
-
-            <div style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: item.color,
-              marginBottom: '4px',
-              textShadow: `0 1px 2px ${item.color}40`
-            }}>
-              {item.value}
-            </div>
-
-            <div style={{
-              fontSize: '0.8rem',
-              color: '#64748b'
-            }}>
-              {item.desc}
-            </div>
-
-            <div style={{
-              width: '100%',
-              height: '3px',
-              background: `linear-gradient(90deg, ${item.color}40, ${item.color})`,
-              borderRadius: '2px',
-              marginTop: '12px'
-            }}></div>
-          </div>
-        ))}
+      {/* === SUMMARY FOOTER === */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <SummaryItem label="Avg Risk" value={`${summary.avg}%`} color={summary.avg > 70 ? '#ef4444' : '#22c55e'} />
+        <SummaryItem label="Peak" value={`${summary.peak}%`} color="#f59e0b" />
+        <SummaryItem label="Alerts" value={summary.alerts} color="#3b82f6" />
+        <SummaryItem label="Critical Days" value={summary.highRisk} color={summary.highRisk > 0 ? '#ef4444' : '#94a3b8'} />
       </div>
+
     </div>
   );
 };
+
+// Sub-component for clean code
+const SummaryItem = ({ label, value, color }) => (
+  <div style={{ textAlign: 'center' }}>
+    <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: color }}>{value}</div>
+    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>{label}</div>
+  </div>
+);
 
 export default RiskGraph;
