@@ -45,7 +45,7 @@ print("Including routers...")
 # ✅ Include routers AFTER app is created
 try:
     print("Importing simulate router...")
-    from src.api.simulate import router as simulate_router
+    from backend.src.api.simulate_controller import router as simulate_router
     app.include_router(simulate_router, prefix="/api", tags=["simulate"])
     print("Simulate router included successfully")
 except Exception as e:
