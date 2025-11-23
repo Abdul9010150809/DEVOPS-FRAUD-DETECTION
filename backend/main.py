@@ -40,12 +40,16 @@ print("Including routers...")
 # ------- Routers -------
 # ---- SIMULATE ROUTER ----
 try:
-    from backend.src.api import simulate_controller
-    app.include_router(simulate_controller.router, prefix="/api/simulate", tags=["simulate"])  # correct router attach
-    print("Simulate router loaded")
+    from src.api import simulation_routes
+    
+    app.include_router(
+        simulation_routes.router, 
+        prefix="/api/simulate", 
+        tags=["simulation"]
+    )
+    print("Simulate router loaded successfully (New File)")
 except Exception as e:
-    print("Simulate router error:", e)
-
+    print("CRITICAL ERROR loading Simulate Router:", e)
 
 try:
     from src.api.webhook_handler import router as webhook_router
