@@ -5,7 +5,7 @@ from datetime import datetime
 import random
 
 router = APIRouter(
-    prefix="",
+    prefix="/api",
     tags=["simulation"]
 )
 

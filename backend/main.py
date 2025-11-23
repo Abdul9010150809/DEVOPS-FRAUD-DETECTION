@@ -40,8 +40,8 @@ print("Including routers...")
 # ------- Routers -------
 # ---- SIMULATE ROUTER ----
 try:
-    from backend.src.api import simulatecontroller
-    app.include_router(simulatecontroller.router)  # correct router attach
+    from backend.src.api import simulate_controller
+    app.include_router(simulate_controller.router, prefix="/api/simulate", tags=["simulate"])  # correct router attach
     print("Simulate router loaded")
 except Exception as e:
     print("Simulate router error:", e)
