@@ -76,19 +76,26 @@ const Dashboard = () => {
     setGraphData(data);
   };
 
-  // --- SIMULATION HANDLER ---
-  const handleSimulation = async () => {
+ const handleSimulation = async () => {
     try {
       setNotification({ type: 'info', message: 'Triggering Simulation...' });
       
       const res = await simulateController.simulateFraud();
       
-      // Show result on UI instead of just console
-      setSimulationLog(res.data.fraud_event);
+      // FIX: Check if 'res' is the full response OR just the data
+      // If res.data exists, use it. Otherwise, assume res IS the data.
+      const responseData = res.data || res;
+
+      if (!responseData.fraud_event) {
+        throw new Error("Response missing 'fraud_event' data");
+      }
+      
+      // Show result on UI
+      setSimulationLog(responseData.fraud_event);
       
       setNotification({ type: 'success', message: '🚨 Fraud Event Detected!' });
       
-      // Auto-refresh stats to show impact
+      // Auto-refresh stats
       fetchDashboardData(); 
       
     } catch (err) {
