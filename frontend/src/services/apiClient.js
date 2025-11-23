@@ -2,21 +2,14 @@
 //  API CLIENT (FINAL VERSION)
 // ================================
 
-// Ensure API URL is defined
 const API_URL =
   process.env.REACT_APP_API_URL?.trim().replace(/\/$/, "") || "";
 
-// ===========
-//  CLIENT
-// ===========
+// CLIENT
 class ApiClient {
   constructor() {
     this.baseURL = API_URL;
   }
-
-  // -------------------------
-  //   BASIC HTTP METHODS
-  // -------------------------
 
   async get(endpoint) {
     return this.request(endpoint, { method: "GET" });
@@ -29,9 +22,6 @@ class ApiClient {
     });
   }
 
-  // -------------------------
-  //   MAIN REQUEST WRAPPER
-  // -------------------------
   async request(endpoint, options = {}) {
     if (!this.baseURL) {
       console.error("❌ ERROR: REACT_APP_API_URL is not set!");
@@ -66,10 +56,7 @@ class ApiClient {
     }
   }
 
-  // -------------------------
-  //   FRAUD ENDPOINTS
-  // -------------------------
-
+  // ----- FRAUD -----
   async getFraudStats() {
     return this.get("/api/fraud/stats");
   }
@@ -90,10 +77,7 @@ class ApiClient {
     return this.get("/api/fraud/health/ml");
   }
 
-  // -------------------------
-  //   ALERTS ENDPOINTS
-  // -------------------------
-
+  // ----- ALERTS -----
   async getRecentAlerts(limit = 50) {
     return this.get(`/api/alerts/recent?limit=${limit}`);
   }
@@ -118,26 +102,20 @@ class ApiClient {
     return this.post(`/api/alerts/escalate/${alertId}`, { priority });
   }
 
-  // -------------------------
-  //   WEBHOOK TEST
-  // -------------------------
-
+  // ----- WEBHOOK -----
   async testWebhook() {
     return this.get("/api/webhook/test");
   }
 
-  // -------------------------
-  //   FRAUD SIMULATION
-  // -------------------------
-
+  // ----- SIMULATION -----
   async simulateFraud() {
     return this.get("/simulate");
   }
 }
 
-// Export instance
+// DEFAULT EXPORT FOR ALL IMPORTS
 const apiClient = new ApiClient();
 export default apiClient;
 
-// Named export for controllers
+// NAMED EXPORT FOR simulateController.js
 export const simulateFraud = () => apiClient.simulateFraud();
