@@ -1,11 +1,5 @@
-// ================================
-//  API CLIENT (FINAL VERSION)
-// ================================
+const API_URL = process.env.REACT_APP_API_URL;
 
-const API_URL =
-  process.env.REACT_APP_API_URL?.trim().replace(/\/$/, "") || "";
-
-// CLIENT
 class ApiClient {
   constructor() {
     this.baseURL = API_URL;
@@ -23,40 +17,27 @@ class ApiClient {
   }
 
   async request(endpoint, options = {}) {
-    if (!this.baseURL) {
-      console.error("❌ ERROR: REACT_APP_API_URL is not set!");
-      throw new Error("Backend URL not configured");
-    }
-
     const url = `${this.baseURL}${endpoint}`;
-
     const config = {
-      method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
-        ...(options.headers || {}),
+        ...options.headers,
       },
-      ...(options.body ? { body: options.body } : {}),
+      ...options,
     };
 
     try {
       const response = await fetch(url, config);
-
       if (!response.ok) {
-        const errBody = await response.text().catch(() => "No details");
-        throw new Error(
-          `HTTP ${response.status} → ${url}\nDetails: ${errBody}`
-        );
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       return await response.json();
     } catch (error) {
-      console.error(`🚨 API request failed (${endpoint}):`, error);
+      console.error(`API request failed: ${endpoint}`, error);
       throw error;
     }
   }
 
-  // ----- FRAUD -----
   async getFraudStats() {
     return this.get("/api/fraud/stats");
   }
@@ -77,7 +58,6 @@ class ApiClient {
     return this.get("/api/fraud/health/ml");
   }
 
-  // ----- ALERTS -----
   async getRecentAlerts(limit = 50) {
     return this.get(`/api/alerts/recent?limit=${limit}`);
   }
@@ -102,20 +82,16 @@ class ApiClient {
     return this.post(`/api/alerts/escalate/${alertId}`, { priority });
   }
 
-  // ----- WEBHOOK -----
   async testWebhook() {
     return this.get("/api/webhook/test");
   }
 
-  // ----- SIMULATION -----
   async simulateFraud() {
     return this.get("/simulate");
   }
 }
 
-// DEFAULT EXPORT FOR ALL IMPORTS
 const apiClient = new ApiClient();
-export default apiClient;
 
-// NAMED EXPORT FOR simulateController.js
+export default apiClient;
 export const simulateFraud = () => apiClient.simulateFraud();
