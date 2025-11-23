@@ -5,61 +5,60 @@ import apiClient from '../services/apiClient';
 const styles = {
   container: {
     padding: '24px',
-    maxWidth: '1400px',
+    maxWidth: '1600px',
     margin: '0 auto',
-    fontFamily: '"JetBrains Mono", "Roboto Mono", monospace', // Tech font
-    color: '#e2e8f0'
+    fontFamily: '"JetBrains Mono", "Roboto Mono", monospace',
+    color: '#e2e8f0',
+    minHeight: '100vh'
   },
   header: {
-    background: 'rgba(15, 23, 42, 0.8)',
+    background: 'rgba(15, 23, 42, 0.9)',
     border: '1px solid #334155',
-    borderRadius: '12px',
+    borderRadius: '8px',
     padding: '24px',
-    marginBottom: '24px',
+    marginBottom: '20px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backdropFilter: 'blur(12px)'
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
   },
-  tableContainer: {
-    background: 'rgba(15, 23, 42, 0.6)',
-    border: '1px solid #334155',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    backdropFilter: 'blur(12px)'
-  },
-  tableHeader: {
-    background: '#1e293b',
-    padding: '16px',
+  gridHeader: {
     display: 'grid',
-    gridTemplateColumns: '0.8fr 2fr 1.5fr 1fr 1fr',
-    fontWeight: '600',
+    gridTemplateColumns: '80px 1.5fr 1fr 1fr 120px 100px',
+    background: '#1e293b',
+    padding: '12px 16px',
+    borderTopLeftRadius: '8px',
+    borderTopRightRadius: '8px',
+    borderBottom: '1px solid #334155',
     color: '#94a3b8',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     textTransform: 'uppercase',
+    fontWeight: '700',
     letterSpacing: '0.05em'
   },
-  row: (severity, resolved) => ({
+  row: (severity, resolved, isExpanded) => ({
     display: 'grid',
-    gridTemplateColumns: '0.8fr 2fr 1.5fr 1fr 1fr',
+    gridTemplateColumns: '80px 1.5fr 1fr 1fr 120px 100px',
     padding: '16px',
     alignItems: 'center',
     borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
-    background: resolved ? 'rgba(30, 41, 59, 0.3)' : 'transparent',
-    opacity: resolved ? 0.6 : 1,
-    transition: 'all 0.2s'
+    background: isExpanded ? 'rgba(59, 130, 246, 0.05)' : resolved ? 'rgba(30, 41, 59, 0.3)' : 'transparent',
+    opacity: resolved ? 0.5 : 1,
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    borderLeft: isExpanded ? '4px solid #3b82f6' : '4px solid transparent'
   }),
-  badge: (severity) => {
-    const colors = {
-      critical: { bg: '#450a0a', text: '#fca5a5', border: '#7f1d1d' },
-      high:     { bg: '#431407', text: '#fdba74', border: '#7c2d12' },
-      medium:   { bg: '#422006', text: '#fde047', border: '#713f12' },
-      low:      { bg: '#064e3b', text: '#6ee7b7', border: '#065f46' }
+  severityBadge: (severity) => {
+    const map = {
+      critical: { bg: '#450a0a', color: '#fca5a5', border: '#7f1d1d' },
+      high:     { bg: '#431407', color: '#fdba74', border: '#7c2d12' },
+      medium:   { bg: '#422006', color: '#fde047', border: '#713f12' },
+      low:      { bg: '#064e3b', color: '#6ee7b7', border: '#065f46' }
     };
-    const c = colors[severity] || colors.low;
+    const s = map[severity] || map.low;
     return {
-      background: c.bg, color: c.text, border: `1px solid ${c.border}`,
-      padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem',
+      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+      padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem',
       fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'center', width: 'fit-content'
     };
   }
@@ -68,32 +67,46 @@ const styles = {
 const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [resolvingId, setResolvingId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('unresolved');
 
-  // --- DATA FETCHING ---
+  // --- DATA SYNC ---
   const fetchAlerts = async () => {
-    setLoading(true);
     try {
-      // 1. Fetch Real Alerts from API
-      const apiRes = await apiClient.getRecentAlerts(50);
-      let combinedAlerts = apiRes.alerts || [];
+      // 1. Get IDs of resolved alerts from storage
+      const resolvedIDs = JSON.parse(localStorage.getItem('resolvedAlertIDs') || '[]');
 
-      // 2. Fetch Simulated Alerts from LocalStorage (Fixing the count issue)
-      const simulated = JSON.parse(localStorage.getItem('simulatedAlerts') || '[]');
+      // 2. Fetch API Alerts
+      let apiAlerts = [];
+      try {
+        const res = await apiClient.getRecentAlerts(50);
+        apiAlerts = res.alerts || [];
+      } catch (e) {
+        console.warn("API Error, using fallback");
+      }
+
+      // 3. Fetch Simulated Alerts
+      const simAlerts = JSON.parse(localStorage.getItem('simulatedAlerts') || '[]');
+
+      // 4. Merge & Filter
+      const allAlerts = [...simAlerts, ...apiAlerts].map(a => ({
+        ...a,
+        // Force 'resolved' if ID is in our local blacklist
+        resolved: a.resolved || resolvedIDs.includes(a.id)
+      }));
+
+      // Remove duplicates
+      const uniqueAlerts = Array.from(new Map(allAlerts.map(item => [item.id, item])).values());
       
-      // Merge: Avoid duplicates if ID conflicts
-      const apiIds = new Set(combinedAlerts.map(a => a.id));
-      const uniqueSimulated = simulated.filter(s => !apiIds.has(s.id));
-      
-      combinedAlerts = [...uniqueSimulated, ...combinedAlerts];
+      // Sort: Unresolved first, then by date
+      uniqueAlerts.sort((a, b) => {
+        if (a.resolved === b.resolved) return b.created_at - a.created_at;
+        return a.resolved ? 1 : -1;
+      });
 
-      // Sort by newest first
-      combinedAlerts.sort((a, b) => b.created_at - a.created_at);
-
-      setAlerts(combinedAlerts);
-    } catch (error) {
-      console.error('Fetch error:', error);
+      setAlerts(uniqueAlerts);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -101,188 +114,198 @@ const Alerts = () => {
 
   useEffect(() => {
     fetchAlerts();
-    // Poll every 5s to check for new simulations
     const interval = setInterval(fetchAlerts, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleResolve = async (id, isSimulated) => {
-    setResolvingId(id);
-    
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 600));
+  // --- ACTIONS ---
+  const handleResolve = (e, alert) => {
+    e.stopPropagation(); // Prevent row expand
+    if (!window.confirm("Mark this threat as mitigated?")) return;
 
-    // Update Local State
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, resolved: true } : a));
-    
-    // If it was a simulation, update localStorage too so it stays resolved on refresh
-    if (isSimulated) {
-      const sims = JSON.parse(localStorage.getItem('simulatedAlerts') || '[]');
-      const updatedSims = sims.map(s => s.id === id ? { ...s, resolved: true } : s);
-      localStorage.setItem('simulatedAlerts', JSON.stringify(updatedSims));
+    // Save ID to "Resolved List" in LocalStorage
+    const resolvedIDs = JSON.parse(localStorage.getItem('resolvedAlertIDs') || '[]');
+    if (!resolvedIDs.includes(alert.id)) {
+      resolvedIDs.push(alert.id);
+      localStorage.setItem('resolvedAlertIDs', JSON.stringify(resolvedIDs));
     }
 
-    setResolvingId(null);
+    // Update UI immediately
+    setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, resolved: true } : a));
   };
 
-  const filteredAlerts = useMemo(() => {
-    return alerts.filter(a => {
-      if (filter === 'all') return true;
-      if (filter === 'unresolved') return !a.resolved;
-      return a.severity === filter;
-    });
+  const getRemediation = (type) => {
+    switch (type) {
+      case 'hardcoded_secret':
+      case 'suspicious_file_change':
+        return {
+          action: "Rotate Credentials immediately.",
+          cmd: "aws iam update-access-key --access-key-id X --status Inactive",
+          desc: "Hardcoded secrets detected in commit history. Revoke keys and use Secrets Manager."
+        };
+      case 'dependency_vuln':
+        return {
+          action: "Update Package Version.",
+          cmd: "npm audit fix --force",
+          desc: "Critical CVE found in dependencies. Upgrade to patched version."
+        };
+      case 'suspicious_ip':
+        return {
+          action: "Block IP Address.",
+          cmd: "iptables -A INPUT -s <IP_ADDR> -j DROP",
+          desc: "Login attempt from non-allowlisted region."
+        };
+      default:
+        return {
+          action: "Investigate Logs.",
+          cmd: "kubectl logs -f deployment/backend",
+          desc: "Anomaly detected. Manual investigation required."
+        };
+    }
+  };
+
+  // --- RENDER ---
+  const filtered = useMemo(() => {
+    if (filter === 'all') return alerts;
+    if (filter === 'unresolved') return alerts.filter(a => !a.resolved);
+    return alerts.filter(a => a.severity === filter && !a.resolved);
   }, [alerts, filter]);
 
-  const stats = useMemo(() => ({
-    critical: alerts.filter(a => a.severity === 'critical' && !a.resolved).length,
-    high: alerts.filter(a => a.severity === 'high' && !a.resolved).length,
-    total: alerts.filter(a => !a.resolved).length
-  }), [alerts]);
+  const stats = {
+    total: alerts.filter(a => !a.resolved).length,
+    critical: alerts.filter(a => a.severity === 'critical' && !a.resolved).length
+  };
 
   return (
     <div style={styles.container}>
       
-      {/* === TOP METRICS HEADER === */}
+      {/* HEADER */}
       <div style={styles.header}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#f8fafc' }}>🛡️ Incident Response Console</h2>
-          <p style={{ margin: '8px 0 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
-            Vulnerability Management & Threat Detection
-          </p>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#f8fafc' }}>🛡️ Threat Response Console</h2>
+          <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '4px' }}>
+            Environment: <span style={{ color: '#22c55e' }}>PRODUCTION</span> • Region: <span style={{ color: '#3b82f6' }}>us-east-1</span>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <MetricBox label="Active Threats" value={stats.total} color="#f8fafc" />
-          <MetricBox label="Critical" value={stats.critical} color="#ef4444" glow />
-          <MetricBox label="High Priority" value={stats.high} color="#f97316" />
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div style={{ textAlign: 'center', background: '#334155', padding: '8px 16px', borderRadius: '6px' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#f8fafc' }}>{stats.total}</div>
+            <div style={{ fontSize: '0.7rem', color: '#cbd5e1' }}>ACTIVE ISSUES</div>
+          </div>
+          <div style={{ textAlign: 'center', background: 'rgba(239, 68, 68, 0.2)', padding: '8px 16px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.5)' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>{stats.critical}</div>
+            <div style={{ fontSize: '0.7rem', color: '#fca5a5' }}>CRITICAL</div>
+          </div>
         </div>
       </div>
 
-      {/* === FILTER BAR === */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+      {/* FILTERS */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
         {['unresolved', 'critical', 'high', 'all'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
+          <button key={f} onClick={() => setFilter(f)}
             style={{
-              background: filter === f ? '#3b82f6' : 'rgba(30, 41, 59, 0.5)',
-              color: 'white',
-              border: filter === f ? '1px solid #60a5fa' : '1px solid #334155',
-              padding: '8px 16px', borderRadius: '4px', cursor: 'pointer',
-              textTransform: 'capitalize', fontSize: '0.85rem', fontWeight: '600',
-              fontFamily: 'inherit'
+              background: filter === f ? '#3b82f6' : 'transparent',
+              border: filter === f ? '1px solid #3b82f6' : '1px solid #475569',
+              color: filter === f ? 'white' : '#94a3b8',
+              padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', textTransform: 'uppercase'
             }}
           >
-            {f} {f === 'unresolved' && `(${stats.total})`}
+            {f}
           </button>
         ))}
-        
-        <button onClick={fetchAlerts} style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
-          🔄 Sync
-        </button>
       </div>
 
-      {/* === ALERTS TABLE === */}
-      <div style={styles.tableContainer}>
-        <div style={styles.tableHeader}>
+      {/* TABLE */}
+      <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
+        <div style={styles.gridHeader}>
           <span>Severity</span>
-          <span>Detection / Message</span>
-          <span>Source / Repository</span>
+          <span>Alert Type</span>
+          <span>Affected Asset</span>
           <span>Time Detected</span>
-          <span style={{textAlign: 'right'}}>Action</span>
+          <span>Status</span>
+          <span style={{textAlign:'right'}}>Action</span>
         </div>
 
-        <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-          {filteredAlerts.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No alerts matching current filters.</div>
+        <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>System Secure. No active threats.</div>
           ) : (
-            filteredAlerts.map(alert => (
-              <div key={alert.id} style={styles.row(alert.severity, alert.resolved)}>
-                
-                {/* 1. Badge */}
-                <div>
-                  <div style={styles.badge(alert.severity)}>
-                    {alert.severity}
-                  </div>
-                </div>
+            filtered.map(alert => {
+              const remediation = getRemediation(alert.type);
+              const isExpanded = expandedId === alert.id;
 
-                {/* 2. Message */}
-                <div>
-                  <div style={{ color: '#f1f5f9', fontWeight: '600' }}>{alert.type}</div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '4px' }}>
-                    {alert.message}
-                  </div>
-                </div>
+              return (
+                <div key={alert.id} style={{ borderBottom: '1px solid #1e293b' }}>
+                  {/* MAIN ROW */}
+                  <div 
+                    style={styles.row(alert.severity, alert.resolved, isExpanded)}
+                    onClick={() => setExpandedId(isExpanded ? null : alert.id)}
+                  >
+                    <div style={styles.severityBadge(alert.severity)}>{alert.severity}</div>
+                    
+                    <div style={{ fontWeight: '600', color: '#e2e8f0' }}>{alert.type}</div>
+                    
+                    <div style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>
+                      📁 {alert.repository || 'backend-api'}
+                    </div>
+                    
+                    <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                      {new Date(alert.created_at * 1000).toLocaleTimeString()}
+                    </div>
 
-                {/* 3. Source */}
-                <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                    📁 {alert.repository || 'System'}
+                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: alert.resolved ? '#22c55e' : '#f59e0b' }}>
+                      {alert.resolved ? 'MITIGATED' : 'OPEN'}
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      {!alert.resolved && (
+                        <button 
+                          onClick={(e) => handleResolve(e, alert)}
+                          style={{
+                            background: '#22c55e', color: '#0f172a', border: 'none',
+                            padding: '4px 10px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer'
+                          }}
+                        >
+                          RESOLVE
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {alert.commit_id && (
-                    <code style={{ background:'rgba(0,0,0,0.3)', padding:'2px 4px', borderRadius:'4px', fontSize:'0.75rem', marginTop:'4px', display:'inline-block' }}>
-                      Commit: {alert.commit_id.substring(0,7)}
-                    </code>
+
+                  {/* EXPANDED DETAILS (REMEDIATION) */}
+                  {isExpanded && (
+                    <div style={{ padding: '20px', background: '#020617', borderTop: '1px dashed #334155' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div>
+                          <h4 style={{ color: '#94a3b8', marginTop: 0 }}>📋 Incident Details</h4>
+                          <p style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{alert.message}</p>
+                          <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#64748b' }}>
+                            <div><strong>Commit ID:</strong> {alert.commit_id || 'N/A'}</div>
+                            <div><strong>Author:</strong> unknown_user</div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 style={{ color: '#f59e0b', marginTop: 0 }}>🛠️ Suggested Remediation</h4>
+                          <div style={{ background: '#1e293b', padding: '10px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.8rem', border: '1px solid #334155' }}>
+                            <div style={{ color: '#22c55e', marginBottom: '5px' }}># {remediation.action}</div>
+                            <div style={{ color: '#e2e8f0' }}>$ {remediation.cmd}</div>
+                          </div>
+                          <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '8px' }}>
+                            {remediation.desc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                {/* 4. Time */}
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                  {formatTime(alert.created_at)}
-                </div>
-
-                {/* 5. Action */}
-                <div style={{ textAlign: 'right' }}>
-                  {alert.resolved ? (
-                    <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ MITIGATED</span>
-                  ) : (
-                    <button
-                      onClick={() => handleResolve(alert.id, alert.isSimulation)}
-                      disabled={resolvingId === alert.id}
-                      style={{
-                        background: resolvingId === alert.id ? '#475569' : '#22c55e',
-                        border: 'none', color: '#000',
-                        padding: '6px 16px', borderRadius: '4px',
-                        cursor: resolvingId === alert.id ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold', fontSize: '0.8rem',
-                        boxShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
-                      }}
-                    >
-                      {resolvingId === alert.id ? '...' : 'RESOLVE'}
-                    </button>
-                  )}
-                </div>
-
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
     </div>
   );
-};
-
-// --- HELPERS ---
-const MetricBox = ({ label, value, color, glow }) => (
-  <div style={{ textAlign: 'center' }}>
-    <div style={{ 
-      fontSize: '1.8rem', fontWeight: 'bold', color: color,
-      textShadow: glow ? `0 0 10px ${color}` : 'none'
-    }}>
-      {value}
-    </div>
-    <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
-  </div>
-);
-
-const formatTime = (ts) => {
-  const date = new Date(ts * 1000);
-  const now = new Date();
-  const diff = (now - date) / 1000; // seconds
-
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return date.toLocaleDateString();
 };
 
 export default Alerts;
