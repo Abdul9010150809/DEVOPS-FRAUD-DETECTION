@@ -2,7 +2,8 @@ import apiClient from "../services/apiClient";
 
 const simulateController = {
   simulateFraud: async () => {
-    return await apiClient.get("/simulate");
+    // FIXED: Added "/api" to match the backend route
+    return await apiClient.get("/api/simulate");
   },
 };
 
