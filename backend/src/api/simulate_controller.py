@@ -1,16 +1,17 @@
+# FILE: backend/src/api/simulate_controller.py
+
 from fastapi import APIRouter
 from datetime import datetime, timezone
 import random
 
-# 1. Define the Router
-# We set prefix="/api" here. 
-# Since the route below is "/simulate", the final URL will be: /api/simulate
+# FIXED: Removed 'backend.' imports causing the crash
+# FIXED: Added prefix="/api" so the URL works
+
 router = APIRouter(
     prefix="/api",
     tags=["simulation"]
 )
 
-# 2. Define the Endpoint
 @router.get("/simulate")
 async def simulate_fraud_event():
     """
@@ -18,7 +19,6 @@ async def simulate_fraud_event():
     Accessible at: GET /api/simulate
     """
     
-    # Generate a fake event ID and commit ID
     event_id = random.randint(1000, 9999)
     commit_suffix = random.randint(10000, 99999)
 
