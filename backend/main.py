@@ -3,22 +3,20 @@ print("Python path:", __file__)
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
 import uvicorn
 import os
 from dotenv import load_dotenv
 
 print("Basic imports completed")
 
-# Import our modules with error handling
-logger = None
+# Import logger safely
 try:
-    
     print("Importing logger and config...")
     from src.utils.logger import get_logger
     from src.utils.config import Config
-    print("Logger and config imported successfully")
     logger = get_logger(__name__)
-    print("Logger instance created")
+    print("Logger and config imported successfully")
 except Exception as e:
     print(f"CRITICAL: Failed to import logger: {e}")
     import traceback
@@ -30,23 +28,34 @@ except Exception as e:
 
 load_dotenv()
 
+# ✅ CREATE FASTAPI APP FIRST
 app = FastAPI(title="DevOps Fraud Shield API", version="1.0.0")
 
-# CORS middleware
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers with error handling
 print("Including routers...")
+
+# ✅ Include routers AFTER app is created
+try:
+    print("Importing simulate router...")
+    from src.api.simulate_controller import router as simulate_router
+    app.include_router(simulate_router, prefix="/api", tags=["simulate"])
+    print("Simulate router included successfully")
+except Exception as e:
+    print(f"Failed to include simulate router: {e}")
+    import traceback
+    traceback.print_exc()
+
 try:
     print("Importing webhook router...")
     from src.api.webhook_handler import router as webhook_router
-    print("Including webhook router in app...")
     app.include_router(webhook_router, prefix="/api", tags=["webhook"])
     print("Webhook router included successfully")
 except Exception as e:
@@ -57,7 +66,6 @@ except Exception as e:
 try:
     print("Importing fraud router...")
     from src.api.fraud_controller import router as fraud_router
-    print("Including fraud router in app...")
     app.include_router(fraud_router, prefix="/api/fraud", tags=["fraud"])
     print("Fraud router included successfully")
 except Exception as e:
@@ -68,7 +76,6 @@ except Exception as e:
 try:
     print("Importing alerts router...")
     from src.api.alerts_controller import router as alerts_router
-    print("Including alerts router in app...")
     app.include_router(alerts_router, prefix="/api/alerts", tags=["alerts"])
     print("Alerts router included successfully")
 except Exception as e:
@@ -78,8 +85,7 @@ except Exception as e:
 
 print("Router inclusion complete")
 
-logger = get_logger(__name__)
-
+# Base routes
 @app.get("/")
 async def root():
     return {"message": "DevOps Fraud Shield API", "status": "running"}
