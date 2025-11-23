@@ -1,10 +1,7 @@
-import apiClient, { simulateFraud as simulateFraudFn } from "../services/apiClient";
+import apiClient from "../services/apiClient";
 
-// OPTION 1 — Use the named export simulateFraud()
 const simulateController = {
-  simulateFraud: async () => {
-    return await simulateFraudFn();
-  },
+  simulateFraud: () => apiClient.get("/simulate"),   // ✅ CORRECT ENDPOINT
 };
 
 export default simulateController;

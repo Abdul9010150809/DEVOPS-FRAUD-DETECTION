@@ -27,18 +27,13 @@ class ApiClient {
       },
     };
 
-    try {
-      const response = await fetch(url, config);
+    const response = await fetch(url, config);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`API error @ ${endpoint}`, error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
     }
+
+    return response.json();
   }
 
   async getFraudStats() {
@@ -94,9 +89,7 @@ class ApiClient {
   }
 }
 
-// ✅ Correct default export
 const apiClient = new ApiClient();
 export default apiClient;
 
-// ✅ Correct named export
 export const simulateFraud = () => apiClient.simulateFraud();
