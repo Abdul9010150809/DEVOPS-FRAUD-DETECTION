@@ -14,13 +14,107 @@ DevOps Fraud Shield provides real-time monitoring and analysis of DevOps workflo
 - **Interactive Dashboard**: React-based UI for monitoring and analysis
 - **Microservices Architecture**: Scalable backend with Python ML service and API layer
 
-## 🏗️ Architecture
+## 🏗️ 3. System Architecture
+```
+                        ┌────────────────────────┐
+                        │      Developer         │
+                        │   Git Push / MR        │
+                        └──────────┬─────────────┘
+                                   │
+                         GitLab/GitHub Webhooks
+                                   │
+                   ┌──────────────▼──────────────┐
+                   │      Backend API (FastAPI)   │
+                   │ - Webhook Handler            │
+                   │ - Fraud Detection Engine     │
+                   │ - Risk Scoring               │
+                   │ - Slack/Email Alerts         │
+                   └──────────────┬──────────────┘
+                                   │
+                         ┌─────────▼──────────┐
+                         │   ML Engine (AI)    │
+                         │ - Isolation Forest  │
+                         │ - Anomaly Detection │
+                         │ - Feature Extraction│
+                         └─────────┬──────────┘
+                                   │
+                         ┌─────────▼──────────┐
+                         │   Database Layer     │
+                         │ - Alerts             │
+                         │ - Commits            │
+                         │ - Risk Scores        │
+                         └─────────┬──────────┘
+                                   │
+                      ┌────────────▼────────────┐
+                      │   Frontend Dashboard     │
+                      │ - React UI               │
+                      │ - Real-time Metrics      │
+                      │ - Charts & Alerts        │
+                      └──────────────────────────┘
+```
 
-The system consists of:
-- **Backend (Python)**: Core API, ML engine, and database services
-- **Frontend (React)**: Dashboard for visualization and monitoring
-- **Infrastructure**: Docker containers and Kubernetes manifests
-- **ML Models**: Pre-trained anomaly detection models
+## 🔄 Workflow (End-to-End Fraud Detection Process)
+# Step 1 — Developer Pushes Code
+
+- Commit/Merge Request is created
+
+- GitLab/GitHub sends a webhook event
+
+# Step 2 — Backend Receives Webhook
+
+- Event metadata is validated
+
+- Commit information extracted
+
+- File changes + actor behavior collected
+
+# Step 3 — Feature Engineering
+
+- Backend processes:
+
+- Commit frequency
+
+- File size change
+
+- Sensitive keywords
+
+- Pipeline trigger type
+
+- Author history
+
+# Step 4 — AI/ML Model Evaluation
+
+- Features passed through Isolation Forest
+
+- Model generates fraud anomaly score
+
+# Step 5 — Risk Score Calculation
+
+- Combined from:
+
+- ML anomaly score
+
+- Predefined security rules
+
+- Threat patterns (signature-based)
+
+# Step 6 — Alerting
+
+- If risk > defined threshold:
+
+- Slack notification sent
+
+- Email alert triggered
+
+- Alert stored in database
+
+# Step 7 — Dashboard Update
+
+- Frontend fetches latest stats
+
+- Alerts table updates
+
+- Risk graph rendered in real time
 
 ### Project Structure
 

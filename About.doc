@@ -1,0 +1,161 @@
+DevOps Fraud Shield – Short Project Summary
+
+Team Introduction
+
+We are Team ERROR-404, consisting of:
+
+    • Abdul Sammed – Team Lead
+      
+    • Shaik Shafi – Developer
+      
+Our focus is on creating intelligent DevSecOps solutions that enhance pipeline security and provide real-time protection against evolving threats in modern software delivery.
+
+Project Objective
+
+DevOps Fraud Shield aims to secure CI/CD pipelines by detecting fraudulent, malicious, or unauthorized activities using a combination of AI/ML analytics and GitLab DevSecOps tools.
+The objective is to:
+
+    1) Identify suspicious commits and abnormal contributor behavior
+
+    2) Prevent unauthorized pipeline execution
+       
+    3) Strengthen supply-chain and code integrity
+       
+    4) Provide real-time visibility into pipeline security
+       
+    5) This ensures safer, more compliant, and more trustworthy DevOps workflows.
+
+
+ Key Features
+
+ 1. AI-Driven Fraud Detection
+
+    • Isolation Forest–based anomaly detection
+      
+    • Commit behavior analysis (frequency, size, pattern deviations)
+      
+    • Real-time fraud risk scoring
+      
+2. Live Webhook Monitoring
+
+    • GitLab/GitHub webhooks send pipeline and commit events instantly
+      
+    • Backend performs validation, signature checks, and threat analysis
+
+3. Security Dashboard
+
+    • Real-time pipeline metrics and risk graphs
+      
+    • Alerts table with severity levels
+      
+    • Status indicators for backend/ML engine health
+
+4. Automated Alerts
+
+    • Slack notifications for high-risk commits
+      
+    • Email alerts with event details
+      
+    • Helps security teams respond faster
+      
+      5. DevSecOps Architecture
+      
+    • FastAPI backend + React dashboard
+      
+    • Machine learning detection engine
+      
+    • Docker-based deployment with microservices design
+      
+Workflow (Step-by-Step)
+
+	Step 1 — Git Event Trigger
+
+    • Push/MR triggers GitLab webhook
+      
+    • Webhook payload sent to FastAPI endpoint
+      
+      Step 2 — Pre-Processing
+      
+    • Extract commit author, file changes, timestamps
+      
+    • Check for suspicious keywords or patterns
+      
+      Step 3 — ML-Based Analysis
+      
+    • Features passed into Isolation Forest model
+      
+    • Model detects anomalies
+      
+      Step 4 — Rule Engine
+      
+    • Additional checks:
+      
+    • Large file diffs
+      
+    • Sensitive file edits
+      
+    • Unexpected contributor activity
+      
+    • Step 5 — Risk Scoring
+      
+    • Combines AI output + security rules
+      
+    • Produces numeric fraud score
+      
+      Step 6 — Alerting System
+      
+    • High-risk events trigger Slack/email alerts
+      
+    • Event logged into database
+      
+      Step 7 — Dashboard Visualization
+      
+    • React dashboard fetches data
+      
+    • Displays risk trends, alerts, pipeline health
+
+
+
+
+GitLab Tools Used
+
+ 1. GitLab Webhooks
+
+    • Used for real-time event ingestion:
+      
+    • Push events
+      
+    • Merge requests
+      
+    • Pipeline triggers
+      
+      2. GitLab CI/CD Pipelines
+
+    • Automates:
+      
+    • Testing
+      
+    • Linting
+      
+    • Deployment
+      
+    • Security scans
+      
+      3. GitLab Security Tools
+      
+    • SAST – Detects insecure code patterns
+      
+    • DAST – Dynamic scanning of running service
+      
+    • Dependency Scanning – Flags vulnerable libraries
+      
+    • These enhance security beyond the AI layer.
+      
+      4. GitLab Container Registry
+      
+    • Stores and manages Docker images used in deployment.
+      
+Summary
+
+DevOps Fraud Shield integrates AI-based detection with GitLab's DevSecOps ecosystem to create a real-time fraud detection system for CI/CD pipelines.
+The solution improves pipeline security, prevents malicious activity, and provides actionable insights to DevOps teams — making software delivery safer and more reliable.
