@@ -98,4 +98,5 @@ class ApiClient {
 
 // Export a singleton instance
 const apiClient = new ApiClient();
+export const simulateFraud = () => apiClient.get("/simulate");
 export default apiClient;

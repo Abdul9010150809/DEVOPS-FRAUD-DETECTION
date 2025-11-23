@@ -15,6 +15,10 @@ const Dashboard = () => {
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+const handleSimulation = async () => {
+   const res = await simulateFraud();
+   console.log("Simulated Fraud Event:", res.data);
+};
 
   // Fetch real dashboard data from backend
   const fetchDashboardData = useCallback(async () => {
