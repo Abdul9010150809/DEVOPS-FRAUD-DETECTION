@@ -74,6 +74,10 @@ const Dashboard = () => {
         created_at: Date.now() / 1000,
         resolved: false
       };
+
+      const existingSims = JSON.parse(localStorage.getItem('simulatedAlerts') || '[]');
+    localStorage.setItem('simulatedAlerts', JSON.stringify([newAlert, ...existingSims]));
+    
       setRecentAlerts(prev => [newAlert, ...prev].slice(0, 5));
 
       setNotification({ type: 'success', message: '🚨 Fraud Event Detected!' });
