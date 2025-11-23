@@ -38,12 +38,14 @@ app.add_middleware(
 print("Including routers...")
 
 # ------- Routers -------
+# ---- SIMULATE ROUTER ----
 try:
-    from src.api.simulate_controller import router as simulate_router
-    app.include_router(simulate_router)  # ⭐ NO PREFIX — frontend uses /simulate
+    from src.api import simulate_controller
+    app.include_router(simulate_controller.router)  # correct router attach
     print("Simulate router loaded")
 except Exception as e:
     print("Simulate router error:", e)
+
 
 try:
     from src.api.webhook_handler import router as webhook_router
