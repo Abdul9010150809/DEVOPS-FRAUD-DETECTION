@@ -40,10 +40,10 @@ print("Including routers...")
 # ------- Routers -------
 # ---- SIMULATE ROUTER ----
 try:
-    from src.api import simulation_routes
+    from src.api import simulate_routes
     
     app.include_router(
-        simulation_routes.router, 
+        simulate_routes.router, 
         prefix="/api/simulate", 
         tags=["simulation"]
     )
